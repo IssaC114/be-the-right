@@ -2,181 +2,653 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>不走冤望路｜No-Detour 政府服務導航助手</title>
+  <title>不走冤枉路 (Be the right.)｜基於 RAG 之智慧政務導引平臺</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="用 AI 幫你少跑一趟公家機關，不再被踢來踢去。">
+  <meta name="description" content="不走冤枉路：基於 RAG 與 LINE ChatBot 的智慧政務導引平臺，結合 n8n、OpenAI、Pinecone 與 Google Maps，提供即時、正確的公家機關辦事資訊與最佳路徑規劃。">
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #020617;
+      --bg: #020617;
+      --bg-soft: #020617;
+      --surface: #020617;
+      --surface-glass: rgba(15,23,42,0.9);
       --accent: #38bdf8;
-      --accent-soft: #0ea5e977;
+      --accent-soft: rgba(56,189,248,0.18);
+      --accent-strong: #0ea5e9;
       --text-main: #e5e7eb;
       --text-sub: #9ca3af;
-      --chip: #111827;
+      --border-subtle: rgba(148,163,184,0.3);
+      --chip-bg: rgba(15,23,42,0.95);
+      --danger: #fb7185;
     }
-    * { box-sizing: border-box; }
-    body {
+
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
+      background:
+        radial-gradient(circle at top, #0b1120 0, #020617 45%, #000 100%);
       color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
       min-height: 100vh;
+      padding: 16px 16px 48px;
+    }
+
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    /* NAVBAR */
+    .nav {
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 24px;
+      justify-content: space-between;
+      padding: 10px 16px;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.3);
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.16), rgba(15,23,42,0.96));
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 12px;
+      z-index: 10;
     }
-    .shell {
-      width: 100%;
-      max-width: 960px;
-      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(15,23,42,0.85));
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      background:
+        conic-gradient(from 200deg, #38bdf8, #0ea5e9, #22c55e, #a855f7, #38bdf8);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-mark::after {
+      content: "↪";
+      font-size: 14px;
+      color: #020617;
+      transform: translateY(-1px);
+    }
+
+    .logo-text-main {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .logo-text-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .nav-link {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
+
+    .nav-link:hover {
+      border-color: rgba(148,163,184,0.6);
+      color: var(--text-main);
+      background: rgba(15,23,42,0.9);
+    }
+
+    .nav-label {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    /* HERO */
+    .hero {
+      margin-top: 20px;
+      padding: 24px 20px 20px;
       border-radius: 24px;
-      border: 1px solid #1f2937;
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,0.14), transparent 55%),
+        radial-gradient(circle at 80% 120%, rgba(168,85,247,0.18), transparent 50%),
+        var(--surface-glass);
+      border: 1px solid rgba(148,163,184,0.35);
       box-shadow:
-        0 16px 60px rgba(0,0,0,0.8),
-        0 0 0 1px rgba(148,163,184,0.1);
-      padding: 28px 24px 24px;
+        0 22px 80px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(15,23,42,0.9);
       backdrop-filter: blur(18px);
     }
-    @media (min-width: 768px) {
-      .shell { padding: 32px 32px 28px; }
-      .grid {
+
+    @media (min-width: 840px) {
+      .hero-inner {
         display: grid;
-        grid-template-columns: minmax(0, 3fr) minmax(0, 2.6fr);
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2.5fr);
         gap: 32px;
         align-items: stretch;
       }
     }
+
     .tagline {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       padding: 4px 10px;
       border-radius: 999px;
-      font-size: 12px;
-      letter-spacing: 0.08em;
+      font-size: 11px;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      background: rgba(15,23,42,0.8);
-      border: 1px solid rgba(148,163,184,0.2);
-      margin-bottom: 16px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.9);
+      margin-bottom: 14px;
     }
+
     .tag-dot {
       width: 8px;
       height: 8px;
       border-radius: 999px;
       background: var(--accent);
-      box-shadow: 0 0 12px var(--accent-soft);
+      box-shadow: 0 0 14px rgba(56,189,248,0.8);
     }
+
     h1 {
-      font-size: clamp(28px, 4vw, 36px);
-      margin: 0 0 8px;
-      letter-spacing: 0.03em;
+      font-size: clamp(26px, 4vw, 38px);
+      line-height: 1.18;
+      margin-bottom: 10px;
     }
-    .subtitle {
+
+    .hero-subtitle {
       font-size: 14px;
       color: var(--text-sub);
-      max-width: 34rem;
-      line-height: 1.6;
+      line-height: 1.7;
+      max-width: 32rem;
     }
-    .chips {
+
+    .hero-highlight {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #e5e7eb;
+      border-left: 3px solid var(--accent);
+      padding-left: 10px;
+    }
+
+    .status-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin: 18px 0 20px;
-    }
-    .chip {
+      margin: 16px 0 18px;
       font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: var(--chip);
-      border: 1px solid rgba(55,65,81,0.9);
-      color: var(--text-sub);
     }
-    .chip strong { color: var(--accent); font-weight: 600; }
-    .cta-row {
+
+    .status-label {
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--text-sub);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 8px rgba(34,197,94,0.9);
+    }
+
+    .stack-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 16px;
+      gap: 6px;
     }
+
+    .stack-pill {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(31,41,55,1);
+      color: var(--text-sub);
+      font-size: 11px;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+
     .btn-primary {
       border: none;
       outline: none;
       cursor: pointer;
       border-radius: 999px;
       padding: 10px 18px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      background: radial-gradient(circle at 10% 0, #38bdf8, #0ea5e9 40%, #0369a1 100%);
+      background: radial-gradient(circle at 0 0, var(--accent), var(--accent-strong) 40%, #0369a1 100%);
       color: #0b1120;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       box-shadow:
-        0 14px 35px rgba(8,47,73,0.9),
-        0 0 0 1px rgba(15,23,42,0.5);
-      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, filter 0.12s;
+        0 14px 40px rgba(8,47,73,0.95),
+        0 0 0 1px rgba(15,23,42,0.7);
+      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, filter 0.12s ease-out;
     }
+
     .btn-primary span.icon {
       font-size: 16px;
       transform: translateY(1px);
     }
+
     .btn-primary:hover {
       transform: translateY(-1px);
       filter: brightness(1.02);
       box-shadow:
-        0 18px 45px rgba(8,47,73,1),
-        0 0 0 1px rgba(56,189,248,0.8);
+        0 18px 48px rgba(8,47,73,1),
+        0 0 0 1px rgba(56,189,248,0.9);
     }
+
     .btn-ghost {
       border-radius: 999px;
       padding: 8px 14px;
       font-size: 12px;
-      border: 1px solid rgba(148,163,184,0.4);
-      background: transparent;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15,23,42,0.9);
       color: var(--text-sub);
       display: inline-flex;
       align-items: center;
       gap: 6px;
       cursor: pointer;
     }
-    .hint {
+
+    .btn-ghost:hover {
+      border-color: rgba(148,163,184,0.7);
+      color: var(--text-main);
+    }
+
+    .hero-note {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    /* HERO RIGHT PANEL */
+    .hero-right {
+      margin-top: 20px;
+    }
+
+    @media (min-width: 840px) {
+      .hero-right {
+        margin-top: 0;
+      }
+    }
+
+    .panel {
+      border-radius: 20px;
+      border: 1px solid rgba(55,65,81,0.9);
+      background:
+        radial-gradient(circle at top, rgba(15,23,42,0.7), rgba(15,23,42,0.96));
+      padding: 16px 14px 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 10px;
+    }
+
+    .panel-header span strong {
+      color: var(--accent);
+    }
+
+    .panel-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+    }
+
+    .pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.9);
+    }
+
+    /* QR CARD */
+    .qr-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.4fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    @media (max-width: 640px) {
+      .qr-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .qr-info {
+      font-size: 12px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .qr-info-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-main);
+    }
+
+    .qr-info-list {
+      margin-top: 6px;
+      list-style: none;
+    }
+
+    .qr-info-list li {
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+
+    .qr-info-dot {
+      margin-top: 2px;
+      font-size: 10px;
+      color: var(--accent);
+    }
+
+    .qr-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .qr-box {
+      width: 140px;
+      height: 140px;
+      border-radius: 20px;
+      border: 1px dashed rgba(148,163,184,0.7);
+      background: repeating-conic-gradient(
+          from 45deg,
+          rgba(15,23,42,1) 0deg 20deg,
+          rgba(15,23,42,0.96) 20deg 40deg
+        );
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-sub);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .qr-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(120deg, rgba(56,189,248,0.42), transparent 40%, transparent 60%, rgba(129,140,248,0.4));
+      mix-blend-mode: soft-light;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    .qr-box strong {
+      font-size: 12px;
+      color: var(--accent);
+      z-index: 1;
+    }
+
+    .qr-box span {
+      z-index: 1;
+    }
+
+    .qr-caption {
+      font-size: 10px;
+      color: var(--text-sub);
+      text-align: center;
+    }
+
+    /* SECTIONS */
+    section {
+      margin-top: 32px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title span.dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(56,189,248,0.9);
+    }
+
+    .section-subtitle {
       font-size: 11px;
       color: var(--text-sub);
     }
 
-    .card {
-      background: radial-gradient(circle at top left, rgba(56,189,248,0.12), rgba(15,23,42,0.95));
-      border-radius: 18px;
-      padding: 16px 14px 14px;
-      border: 1px solid rgba(75,85,99,0.8);
+    .section-body {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.8;
+    }
+
+    .section-body strong {
+      color: var(--text-main);
+    }
+
+    /* FEATURES */
+    .features-grid {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .feature-card {
+      border-radius: 16px;
+      padding: 14px 12px;
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(55,65,81,1);
       position: relative;
       overflow: hidden;
-      min-height: 220px;
     }
-    .card-label {
+
+    .feature-label {
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.12em;
       color: var(--text-sub);
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
-    .timeline {
-      display: grid;
-      gap: 10px;
+
+    .feature-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .feature-desc {
+      font-size: 12px;
+      color: var(--text-sub);
+      line-height: 1.7;
+    }
+
+    .feature-tag {
       margin-top: 6px;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--accent);
     }
-    .step {
+
+    .feature-tag span.icon {
+      font-size: 12px;
+    }
+
+    /* ARCHITECTURE */
+    .arch-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.65fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 840px) {
+      .arch-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .arch-box {
+      border-radius: 16px;
+      padding: 12px 12px 10px;
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(55,65,81,1);
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .arch-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-main);
+    }
+
+    .arch-list {
+      margin-top: 6px;
+      list-style: none;
+    }
+
+    .arch-list li {
+      margin-bottom: 4px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .arch-bullet {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    .arch-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .arch-chip {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.9);
+    }
+
+    /* DEPLOYMENT */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.3fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 840px) {
+      .steps-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .step-list {
+      list-style: none;
+      font-size: 12px;
+      color: var(--text-sub);
+      padding-left: 0;
+    }
+
+    .step-item {
       display: grid;
       grid-template-columns: auto 1fr;
-      gap: 8px 10px;
-      align-items: start;
+      gap: 6px 10px;
+      margin-bottom: 8px;
+      align-items: flex-start;
     }
+
     .step-badge {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 999px;
       border: 1px solid rgba(148,163,184,0.7);
       display: flex;
@@ -184,101 +656,589 @@
       justify-content: center;
       font-size: 11px;
       color: var(--accent);
-      background: rgba(15,23,42,0.9);
+      background: rgba(15,23,42,0.95);
     }
-    .step-title {
-      font-size: 13px;
+
+    .step-head {
+      font-size: 12px;
       font-weight: 600;
+      color: var(--text-main);
     }
-    .step-desc {
+
+    .step-body {
       grid-column: 2 / 3;
       font-size: 12px;
       color: var(--text-sub);
-      line-height: 1.5;
-    }
-    .footer {
-      margin-top: 18px;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      font-size: 11px;
-      color: var(--text-sub);
-      opacity: 0.9;
-    }
-    .dot-row {
-      display: inline-flex;
-      gap: 4px;
-      align-items: center;
-    }
-    .mini-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(148,163,184,0.7);
-    }
-    .pill {
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.5);
     }
 
-    @media (max-width: 767px) {
-      .shell { border-radius: 18px; }
-      .card { margin-top: 18px; }
+    .cred-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    .cred-table th,
+    .cred-table td {
+      padding: 6px 6px;
+      border: 1px solid rgba(55,65,81,1);
+    }
+
+    .cred-table th {
+      color: var(--text-sub);
+      background: rgba(15,23,42,0.95);
+      font-weight: 500;
+    }
+
+    .cred-table td {
+      color: var(--text-main);
+    }
+
+    /* DATA & FUTURE */
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.3fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 840px) {
+      .two-col {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .bullet-list {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-sub);
+      padding-left: 1.1em;
+    }
+
+    .bullet-list li {
+      margin-bottom: 4px;
+    }
+
+    /* TEAM & FOOTER */
+    .team-card {
+      border-radius: 16px;
+      padding: 12px 12px 10px;
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(55,65,81,1);
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .team-names {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    .footer {
+      margin-top: 26px;
+      font-size: 11px;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      border-top: 1px solid rgba(31,41,55,1);
+      padding-top: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .nav {
+        border-radius: 18px;
+        padding-inline: 10px;
+      }
+      .nav-right {
+        display: none;
+      }
+      .hero {
+        padding: 18px 14px 16px;
+        border-radius: 20px;
+      }
+      .footer {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <div class="grid">
-      <!-- 左：主介紹 -->
-      <section>
-        <div class="tagline">
-          <div class="tag-dot"></div>
-          <span>NO-DETOUR · 不走冤望路</span>
+  <div class="page">
+    <div class="shell">
+      <!-- NAV -->
+      <header class="nav">
+        <div class="nav-left">
+          <div class="logo-mark"></div>
+          <div>
+            <div class="logo-text-main">NO DETOUR</div>
+            <div class="logo-text-sub">不走冤枉路 · RAG 政務導引平臺</div>
+          </div>
         </div>
-
-        <h1>少跑一趟公家機關<br>讓 AI 幫你「不走冤望路」</h1>
-
-        <p class="subtitle">
-          不再被櫃台踢來踢去、不再看不懂公文。<br>
-         「不走冤望路」是結合政府開放資料與 AI 導覽的智慧小幫手，
-          幫你把 <strong>要帶什麼、要去哪、先做哪一步</strong> 講清楚。
-        </p>
-
-        <div class="chips">
-          <div class="chip"><strong>Step-by-step</strong> 手把手流程指引</div>
-          <div class="chip">支援：戶政、地政、交通、補助申請</div>
-          <div class="chip">整合開放資料 &amp; 政府網站連結</div>
-          <div class="chip">為「初次辦理」的人設計</div>
-        </div>
-
-        <div class="cta-row">
-          <button class="btn-primary" onclick="alert('這裡未來可以接上你的 Demo 連結，例如 LINE Bot、Web App 或 Figma Prototype。')">
-            <span class="icon">🚶‍♀️</span>
-            <span>開始不走冤望路 Demo</span>
+        <div class="nav-right">
+          <span class="nav-label">Be the right.</span>
+          <button class="nav-link" onclick="document.getElementById('about')?.scrollIntoView({behavior:'smooth'})">
+            專案簡介
           </button>
-
-          <button class="btn-ghost" onclick="document.getElementById('flow-card')?.scrollIntoView({behavior:'smooth'});">
-            <span>看看典型使用情境</span>
-            <span>↓</span>
+          <button class="nav-link" onclick="document.getElementById('features')?.scrollIntoView({behavior:'smooth'})">
+            核心功能
+          </button>
+          <button class="nav-link" onclick="document.getElementById('arch')?.scrollIntoView({behavior:'smooth'})">
+            系統架構
+          </button>
+          <button class="nav-link" onclick="document.getElementById('deploy')?.scrollIntoView({behavior:'smooth'})">
+            快速部署
           </button>
         </div>
+      </header>
 
-        <div class="hint">
-          這個頁面目前是靜態展示版。<br>
-          未來可以連結：LINE ChatBot、n8n Flow、政府 API、RAG 搜尋等實際服務。
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero-inner">
+          <div class="hero-left">
+            <div class="tagline">
+              <span class="tag-dot"></span>
+              <span>不走冤枉路 (Be the right.)</span>
+            </div>
+
+            <h1>基於 RAG 之智慧政務導引平臺</h1>
+
+            <p class="hero-subtitle">
+              「願你不走冤枉路。」結合 LINE ChatBot 與 RAG 技術，
+              提供即時、正確的公家機關辦事資訊與
+              <strong>最佳路徑規劃</strong>，讓每一次出門辦事都走在對的路上。
+            </p>
+
+            <p class="hero-highlight">
+              現今網路資訊爆炸，民眾常被過時或錯誤的資訊誤導，
+              白白浪費時間跑錯地點。本專案透過 n8n、OpenAI、Pinecone 與 Google Maps 的整合，
+              讓「辦事」從焦慮變成一條清楚的導引路徑。
+            </p>
+
+            <div class="status-row">
+              <div class="status-label">
+                <span class="status-dot"></span>
+                <span>Project Status：<strong>Prototype · On going</strong></span>
+              </div>
+            </div>
+
+            <div class="stack-row">
+              <span class="stack-pill">n8n</span>
+              <span class="stack-pill">OpenAI · GPT-4o</span>
+              <span class="stack-pill">LINE Messaging API</span>
+              <span class="stack-pill">RAG / Vector DB (Pinecone)</span>
+              <span class="stack-pill">Google Maps Directions API</span>
+            </div>
+
+            <div class="hero-cta-row">
+              <button class="btn-primary" onclick="document.getElementById('features')?.scrollIntoView({behavior:'smooth'})">
+                <span class="icon">🚶‍♀️</span>
+                <span>看看「不走冤枉路」怎麼幫你少跑一趟</span>
+              </button>
+
+              <button class="btn-ghost" onclick="document.getElementById('deploy')?.scrollIntoView({behavior:'smooth'})">
+                <span>我要直接看部署流程</span>
+                <span>↗</span>
+              </button>
+            </div>
+
+            <div class="hero-note">
+              本頁為 GitHub Pages 靜態展示頁，實際 Demo 可綁定：LINE Official Account、n8n Workflow 與後端 RAG Pipeline。
+            </div>
+          </div>
+
+          <!-- HERO RIGHT: QR + STATUS -->
+          <aside class="hero-right">
+            <div class="panel">
+              <div class="panel-header">
+                <span>入口方式：<strong>LINE 官方帳號</strong></span>
+                <div class="panel-badges">
+                  <span class="pill">RAG Agent</span>
+                  <span class="pill">Multi-Step Flow</span>
+                </div>
+              </div>
+
+              <div class="qr-layout">
+                <div class="qr-info">
+                  <div class="qr-info-title">掃描即可啟動「不走冤枉路」</div>
+                  <p>
+                    未來，使用者只需要打開 LINE，掃描右側 QR Code，即可：
+                  </p>
+                  <ul class="qr-info-list">
+                    <li>
+                      <span class="qr-info-dot">•</span>
+                      <span>以自然語言提問：「我要辦結婚登記，要準備什麼？」</span>
+                    </li>
+                    <li>
+                      <span class="qr-info-dot">•</span>
+                      <span>取得辦理所需文件、櫃檯單位與營業時間。</span>
+                    </li>
+                    <li>
+                      <span class="qr-info-dot">•</span>
+                      <span>一鍵生成「不走冤枉路」多點最佳路線。</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="qr-card">
+                
+                  <div class="qr-box">
+  <img src="M_gainfriends_2dbarcodes_GW.png" alt="不走冤枉路 LINE QR" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
-      <!-- 右：流程卡片 -->
-      <section>
-        <div class="card" id="flow-card">
-          <div class="card-label">Example Journey · 範例流程</div>
+      <!-- ABOUT -->
+      <section id="about">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="dot"></span>
+            <span>專案簡介 · Problem → Solution</span>
+          </div>
+          <div class="section-subtitle">
+            從「被退件好幾次」到「一次走對路」。
+          </div>
+        </div>
+        <div class="section-body">
+          <p>
+            在現今資訊爆炸的環境下，民眾查詢公家機關辦事流程時，常常被：
+            <strong>過時文章、非官方整理、錯誤教學</strong> 誤導。
+            實際到現場才發現文件不齊備、地點跑錯或順序錯誤，只能
+            <strong>多請假、多跑一趟</strong>，形成名符其實的「冤枉路」。
+          </p>
+          <p style="margin-top:8px;">
+            「不走冤枉路」是一個基於 <strong>n8n 自動化流程</strong> 的智慧導引平臺，
+            透過 <strong>LINE 官方帳號</strong> 提供服務。系統採用
+            <strong>RAG（Retrieval-Augmented Generation）架構</strong>，
+            以經人工查證的政務知識庫為基礎，結合
+            <strong>Google Maps 多點路徑規劃</strong>，
+            自動算出「要帶什麼、先去哪、怎麼走最順」。
+          </p>
+        </div>
+      </section>
 
-          <div class="timeline">
-            <div class="step">
-              <div class="step-badge">01</div>
-              <div class="step-title">輸入：想做什麼，但不知道去哪</div>
-              <div class="s
+      <!-- FEATURES -->
+      <section id="features">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="dot"></span>
+            <span>核心功能 · Core Features</span>
+          </div>
+          <div class="section-subtitle">
+            把「查不到 / 看不懂 / 走錯路」變成「一條講人話的流程」。
+          </div>
+        </div>
+
+        <div class="features-grid">
+          <!-- Feature 1 -->
+          <article class="feature-card">
+            <div class="feature-label">Feature 01 · RAG Q&amp;A</div>
+            <div class="feature-title">智慧問答（RAG 驅動）</div>
+            <p class="feature-desc">
+              結合向量資料庫與 GPT-4o，精準回答辦事所需文件、應前往的機關、
+              櫃檯位置與營業時間。所有基礎資料經過人工整理與查驗，
+              相較於一般「純生成」AI，更可靠且可追溯來源。
+            </p>
+            <div class="feature-tag">
+              <span class="icon">🧠</span>
+              <span>Vector DB + GPT-4o</span>
+            </div>
+          </article>
+
+          <!-- Feature 2 -->
+          <article class="feature-card">
+            <div class="feature-label">Feature 02 · Routing</div>
+            <div class="feature-title">不走冤枉路的最佳路徑規劃</div>
+            <p class="feature-desc">
+              對於必須同時跑多個機關的情境（例如：戶政事務所、監理站、區公所），
+              系統會呼叫 Google Maps Directions API，
+              計算多點間的合理順序與建議路線，避免來回折返與重複通勤。
+            </p>
+            <div class="feature-tag">
+              <span class="icon">🗺️</span>
+              <span>Multi-stop Routing</span>
+            </div>
+          </article>
+
+          <!-- Feature 3 -->
+          <article class="feature-card">
+            <div class="feature-label">Feature 03 · UX</div>
+            <div class="feature-title">LINE 即時互動，不用再下載新 App</div>
+            <p class="feature-desc">
+              使用者只需加入 LINE 官方帳號，即可用聊天的方式提問：
+              「我要辦 OO 證」、「我想變更戶籍」、「護照遺失怎麼辦」等。
+              不需另外註冊帳號或下載新應用程式，大幅降低使用門檻。
+            </p>
+            <div class="feature-tag">
+              <span class="icon">💬</span>
+              <span>Chat-native Experience</span>
+            </div>
+          </article>
+
+          <!-- Feature 4 -->
+          <article class="feature-card">
+            <div class="feature-label">Feature 04 · Automation</div>
+            <div class="feature-title">n8n 自動化 Orchestration</div>
+            <p class="feature-desc">
+              透過 n8n 視覺化編排整個流程：Webhook 接收 LINE 訊息、
+              呼叫 OpenAI、向量檢索、Google Maps API 以及回覆訊息。
+              將複雜的多服務串接轉換為可觀察、可維護的 Workflow。
+            </p>
+            <div class="feature-tag">
+              <span class="icon">⚙️</span>
+              <span>Visual Flow · Agent Tools</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ARCHITECTURE -->
+      <section id="arch">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="dot"></span>
+            <span>系統架構 · System Architecture</span>
+          </div>
+          <div class="section-subtitle">
+            LINE → n8n → RAG Agent → Maps：一條視覺化可觀察的 AI 流程。
+          </div>
+        </div>
+
+        <div class="arch-layout">
+          <div class="arch-box">
+            <div class="arch-title">整體架構概覽</div>
+            <ul class="arch-list">
+              <li>
+                <span class="arch-bullet">①</span>
+                <span><strong>使用者介面 · LINE Official Account</strong>：民眾以聊天方式輸入需求與問題。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">②</span>
+                <span><strong>自動化引擎 · n8n</strong>：接收 Webhook，負責 Orchestration、工具呼叫與錯誤處理。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">③</span>
+                <span><strong>LLM 模型 · OpenAI GPT-4o</strong>：扮演 AI Agent，透過工具（Tools）模式進行檢索與規劃。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">④</span>
+                <span><strong>向量資料庫 · Pinecone</strong>：儲存政務知識庫 Embeddings，支援 RAG 查詢。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">⑤</span>
+                <span><strong>地圖服務 · Google Maps Directions API</strong>：負責多點路線與最佳順序計算。</span>
+              </li>
+            </ul>
+
+            <div class="arch-chip-row">
+              <span class="arch-chip">LINE Messaging API Webhook</span>
+              <span class="arch-chip">Tools-enabled Agent Flow</span>
+              <span class="arch-chip">Vector Retrieval + Generation</span>
+              <span class="arch-chip">Multi-Stop Directions</span>
+            </div>
+          </div>
+
+          <div class="arch-box">
+            <div class="arch-title">n8n Workflow · Node 角色</div>
+            <ul class="arch-list">
+              <li>
+                <span class="arch-bullet">•</span>
+                <span><strong>Line (Webhook)</strong>：接收使用者訊息，觸發整個流程。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">•</span>
+                <span><strong>OpenAI Chat Model</strong>：處理自然語言理解，呼叫工具（RAG 查詢、路徑規劃）。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">•</span>
+                <span><strong>Embeddings OpenAI</strong>：對查詢語句做向量化，送往 Pinecone。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">•</span>
+                <span><strong>Pinecone Vector Store</strong>：檢索最相關的政務知識片段。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">•</span>
+                <span><strong>HTTP Request Tool (Maps)</strong>：呼叫 Google Maps Directions API，產生路徑與順序。</span>
+              </li>
+              <li>
+                <span class="arch-bullet">•</span>
+                <span><strong>HTTP Request1 (LINE Reply)</strong>：將整理好的答案與路徑導引回傳給使用者。</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEPLOYMENT -->
+      <section id="deploy">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="dot"></span>
+            <span>快速部署 · Deployment Flow</span>
+          </div>
+          <div class="section-subtitle">
+            已提供 n8n Workflow JSON，一鍵匯入後只需補上憑證與資料。
+          </div>
+        </div>
+
+        <div class="steps-grid">
+          <div>
+            <ol class="step-list">
+              <li class="step-item">
+                <div class="step-badge">01</div>
+                <div class="step-head">前置需求（Prerequisites）</div>
+                <div class="step-body">
+                  確保已備妥以下帳號／金鑰：
+                  <br>‧ 已運行中的 <strong>n8n 實例</strong>（自架 Docker 或 Cloud 版本）
+                  <br>‧ <strong>LINE Developers</strong>：Messaging API Channel（Channel Access Token、Channel Secret）
+                  <br>‧ <strong>OpenAI</strong>：支援 <code>gpt-4o</code> 與 <code>text-embedding-3-large</code>
+                  <br>‧ <strong>Pinecone</strong>：建立好 Index，並準備已向量化的政務資料
+                  <br>‧ <strong>Google Cloud</strong>：啟用 <code>Directions API</code> 並取得 API Key
+                </div>
+              </li>
+
+              <li class="step-item">
+                <div class="step-badge">02</div>
+                <div class="step-head">匯入 n8n Workflow</div>
+                <div class="step-body">
+                  1. 下載專案提供的 <code>.json</code> Workflow 檔案。<br>
+                  2. 開啟 n8n Editor UI，右上角選單 → <strong>Import from File</strong>。<br>
+                  3. 選擇該 JSON 檔匯入，即可建立完整流程。
+                </div>
+              </li>
+
+              <li class="step-item">
+                <div class="step-badge">03</div>
+                <div class="step-head">設定 Credentials</div>
+                <div class="step-body">
+                  在 n8n 中點選紅色節點，依照下表補上對應 Credential：
+                </div>
+              </li>
+
+              <li class="step-item">
+                <div class="step-badge">04</div>
+                <div class="step-head">設定 Webhook 與 LINE Callback</div>
+                <div class="step-body">
+                  1. 在 n8n 的 <strong>Line (Webhook)</strong> 節點取得 Production URL 或 Test URL。<br>
+                  2. 前往 LINE Developers Console → Messaging API → Webhook settings。<br>
+                  3. 將 URL 貼上並啟用 <strong>Use webhook</strong>。<br>
+                  4. 測試以 LINE 傳送訊息，即可觸發整個流程。
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <div>
+            <table class="cred-table">
+              <thead>
+                <tr>
+                  <th>節點名稱</th>
+                  <th>需設定的憑證</th>
+                  <th>用途說明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>HTTP Request1 (LINE Reply)</td>
+                  <td>LINE Access Token</td>
+                  <td>回傳訊息到 LINE 官方帳號</td>
+                </tr>
+                <tr>
+                  <td>OpenAI Chat Model</td>
+                  <td>OpenAI API</td>
+                  <td>使用 GPT-4o 生成回答與規劃</td>
+                </tr>
+                <tr>
+                  <td>Embeddings OpenAI</td>
+                  <td>OpenAI API</td>
+                  <td>查詢語句向量化（RAG 查詢）</td>
+                </tr>
+                <tr>
+                  <td>Pinecone Vector Store</td>
+                  <td>Pinecone API</td>
+                  <td>設定 Index Name 與連線資訊</td>
+                </tr>
+                <tr>
+                  <td>HTTP Request Tool (Maps)</td>
+                  <td>Google Maps API Key</td>
+                  <td>於 Query Parameters 中填入 <code>key</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- DATA & FUTURE -->
+      <section id="data">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="dot"></span>
+            <span>資料準備 &amp; 未來展望</span>
+          </div>
+          <div class="section-subtitle">
+            好的 RAG，從乾淨、可維護的政務知識庫開始。
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="arch-box">
+            <div class="arch-title">資料準備（Data Preparation）</div>
+            <ul class="bullet-list">
+              <li>收集公家機關（如區公所、戶政事務所、外交部領事事務局等）的業務資訊與實際辦理規則。</li>
+              <li>將資訊整理為表格或結構化文字（CSV / JSON），包含：業務類型、所需文件、櫃檯單位、營業時間等欄位。</li>
+              <li>使用 n8n 或獨立 Python script 將文字轉換為 Embedding，寫入 Vector Database（Pinecone）。</li>
+              <li>針對高風險情境（例如：退件率高的申請）額外標註提示與常見錯誤，提供更貼近真實情境的輔助說明。</li>
+            </ul>
+          </div>
+
+          <div class="arch-box">
+            <div class="arch-title">未來展望（Future Roadmap）</div>
+            <ul class="bullet-list">
+              <li>擴展至全台灣各縣市行政機關，建立跨縣市共用的政務知識層。</li>
+              <li>納入學校、補助申請、醫療行政等更多日常會遇到的流程情境。</li>
+              <li>優化 AI Agent 的語意理解與對話記憶，讓辦事就像跟朋友聊天一樣自然。</li>
+              <li>將統計到的退件原因與常見問題回饋給政府單位，成為未來優化流程與設計數位服務的依據。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- TEAM -->
+      <section id="team">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="dot"></span>
+            <span>團隊成員 · Team</span>
+          </div>
+          <div class="section-subtitle">
+            從使用者痛點出發，把「走錯路」變成「走對路」。
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div>本專案由三位成員共同設計與實作：</div>
+          <p class="team-names">
+            周詠熙 · 陳宜妏 · 黃湙琁
+          </p>
+          <p style="margin-top:6px;">
+            團隊聚焦於：「如何把真正有用的政務資訊，用一般人看得懂、願意使用的方式交給民眾」，
+            而不是再多做一個只有內行人才知道怎麼點進去的網站。
+          </p>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="footer">
+        <div>© 不走冤枉路 (Be the right.) · 基於 RAG 之智慧政務導引平臺</div>
+        <div>Stack：n8n · OpenAI GPT-4o · Pinecone · Google Maps · LINE Messaging API · GitHub Pages</div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
