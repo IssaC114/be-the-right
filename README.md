@@ -21,11 +21,11 @@
 
 本專案使用 **n8n** 作為核心後端，採用 **AI Agent** 架構掛載工具 (Tools) 模式運作：
 
-* **使用者介面**：LINE Official Account (ChatBot)
-* **自動化引擎**：n8n (Workflow Automation)
+* **使用者介面**：LINE Official Account
+* **自動化引擎**：n8n
 * **LLM 模型**：OpenAI GPT-4o
-* **向量資料庫 (Vector DB)**：Pinecone (或 ChromaDB)
-* **地圖服務**：Google Maps Directions API (需開啟 `optimize:true` 以規劃最佳路徑)
+* **向量資料庫 (Vector DB)**：Pinecone
+* **地圖服務**：Google Maps Directions API
 
 ## 快速部署 (Deployment)
 
