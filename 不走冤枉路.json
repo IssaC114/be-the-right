@@ -1,0 +1,452 @@
+{
+  "name": "不走冤枉路",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        -64
+      ],
+      "id": "bffc4dee-a719-4eb4-9423-a0c57e88f63c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  replyToken: $('LINE-API-Setting').item.json.replyToken,\n  messages: [\n    {\n      type: 'text',\n      text: $json.output || '抱歉，我目前無法處理您的請求。'\n    }\n  ]\n}) }}\n",
+        "options": {}
+      },
+      "id": "9115d9cf-b862-44b0-9c62-289e703b8968",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        -64
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "8ykhaEJjeM9NEjIJ",
+          "name": "Bearer Auth account 32"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "text",
+              "name": "text",
+              "value": "={{ $json.output || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        -64
+      ],
+      "id": "2f101838-ca08-4539-8b3d-5c33f146bb13",
+      "name": "LineRequest"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lukandpartners",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a74edd88-8060-49bb-96df-cf8de3874a1e",
+      "name": "Line",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        -64
+      ],
+      "webhookId": "5cace92c-b094-4fb6-acbf-0e0944009c75"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "chatInput",
+              "name": "chatInput",
+              "value": "={{ $json.body.events[0].message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "sessionId",
+              "name": "sessionId",
+              "value": "={{ $json.body.events[0].source.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "replyToken",
+              "name": "replyToken",
+              "value": "={{ $json.body.events[0].replyToken }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -560,
+        -64
+      ],
+      "id": "7a6688e2-e198-46b4-8751-6262ca88040f",
+      "name": "LINE-API-Setting"
+    },
+    {
+      "parameters": {
+        "url": "https://api.line.me/v2/bot/profile",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -336,
+        -64
+      ],
+      "id": "65a82e8b-b8b8-40db-ac86-fdaab0eabe6d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        192
+      ],
+      "id": "f998b690-8d07-4e0d-ac47-3f10390a1297",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "你是一個「不走冤枉路」智慧政務導引助手。\n1. 優先使用「Government_Info_Search」工具來回答使用者的政務問題（如辦理文件、地點、時間）。\n2. 如果使用者想知道如何前往，或詢問多個地點的最佳順序，請使用「Google_Maps_Route」工具。\n3. 請用繁體中文親切回答。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -80,
+        -64
+      ],
+      "id": "9c52efb0-1670-4c0c-b3e1-8c938416b006",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -256,
+        192
+      ],
+      "id": "f04bb06b-8e6e-474e-bff9-7fbaac13149b",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "EyAqluD97SsTuXWe",
+          "name": "OpenAi account 50"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://maps.googleapis.com/maps/api/directions/json",
+        "sendQuery": true,
+        "parametersQuery": {
+          "values": [
+            {}
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        192
+      ],
+      "id": "f6cbde39-0997-4093-95e8-343a1d222814",
+      "name": "HTTP Request Tool (Maps)1"
+    },
+    {
+      "parameters": {
+        "name": "Government_Info_Search",
+        "description": "搜尋所有關於公家機關、辦事流程、文件需求、營業時間的資訊。"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        208,
+        192
+      ],
+      "id": "528347cb-617d-4a12-b1cc-edf3a6e11537",
+      "name": "Vector Store Tool (RAG)1"
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "1003",
+          "mode": "list",
+          "cachedResultName": "1003"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1,
+      "position": [
+        32,
+        368
+      ],
+      "id": "d3a2c48c-b8ff-458f-9b44-1b8d3f0c7b67",
+      "name": "Pinecone Vector Store1",
+      "credentials": {
+        "pineconeApi": {
+          "id": "q4yfiW4qyHiEDLyO",
+          "name": "PineconeApi account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        32,
+        528
+      ],
+      "id": "b8ace015-6664-4b27-a787-1f53083658e3",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "EyAqluD97SsTuXWe",
+          "name": "OpenAi account 50"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        336
+      ],
+      "id": "c3d6931b-a761-459d-87cd-239a2985aba7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EyAqluD97SsTuXWe",
+          "name": "OpenAi account 50"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LineRequest": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Line": {
+      "main": [
+        [
+          {
+            "node": "LINE-API-Setting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LINE-API-Setting": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "LineRequest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Tool (Maps)1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Tool (RAG)1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store1": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Tool (RAG)1",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vector Store Tool (RAG)1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5f1f6f36-11ed-4279-82a3-3cd99c33d027",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cc13dcf8553a35e0b689831be3319d4fb040956c8150f180a20e81bff412960c"
+  },
+  "id": "cOCvGJZz086F3XFX",
+  "tags": []
+}
